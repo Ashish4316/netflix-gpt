@@ -1,11 +1,81 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Header from "./Header";
+import { auth } from "../utils/firebase";
+import { checkValidation } from "../utils/validate";
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  updateProfile,
+} from "firebase/auth";
+import { useDispatch } from "react-redux";
+import { addUser } from "../utils/userSlice";
 
 const Login = () => {
-  let[isSignIn,setSignIn] = useState(false);
-  function toogleSignIn(){
-    setSignIn((prev) => !prev);
+  const email = useRef(null);
+  const password = useRef(null);
+  const name = useRef(null);
+  const dispatch = useDispatch();
+  const [isSignIn, setIsSignIn] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  function toggleSignIn() {
+    setIsSignIn((prev) => !prev);
+    setErrorMessage("");
   }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+
+    const msg = checkValidation(
+      email.current.value,
+      password.current.value
+    );
+
+    setErrorMessage(msg);
+    if (msg) return;
+
+    setLoading(true);
+
+    try {
+      let userCredential;
+      if (!isSignIn) {
+        // SIGN UP
+        userCredential = await createUserWithEmailAndPassword(
+          auth,
+          email.current.value,
+          password.current.value
+        );
+
+        await updateProfile(userCredential.user, {
+          displayName: name.current.value,
+        });
+      } else {
+        // SIGN IN
+        userCredential = await signInWithEmailAndPassword(
+          auth,
+          email.current.value,
+          password.current.value
+        );
+      }
+
+      // Dispatch user to Redux store
+      const user = userCredential.user;
+      dispatch(
+        addUser({
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName || name.current?.value || "",
+          photoURL: user.photoURL || null,
+        })
+      );
+    } catch (err) {
+      setErrorMessage(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="relative h-screen w-screen overflow-hidden">
       {/* Background */}
@@ -25,65 +95,84 @@ const Login = () => {
         }}
       ></div>
 
-      {/* Header */}
       <Header />
 
       {/* Login Box */}
-      {/* Login Box */}
-<div className="relative z-10 flex h-full items-center justify-center">
-  <div className="w-[450px] rounded-md bg-black/75 p-12 text-white shadow-xl">
-    <h1 className="mb-6 text-3xl font-bold">{(isSignIn) ? "Sign In" : "Sign Up"}</h1>
+      <div className="relative z-10 flex h-full items-center justify-center">
+        <div className="w-[450px] rounded-md bg-black/75 p-12 text-white shadow-xl">
+          <h1 className="mb-6 text-3xl font-bold">
+            {isSignIn ? "Sign In" : "Sign Up"}
+          </h1>
 
-    {/* Email */}
-    <div className="mb-4">
-      <input
-        type="email"
-        placeholder="Email or phone number"
-        className="w-full rounded bg-[#333] p-4 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-600"
-      />
-    </div>
+          <form onSubmit={handleSubmit}>
+            {/* Email */}
+            <div className="mb-4">
+              <input
+                ref={email}
+                type="email"
+                placeholder="Email or phone number"
+                className="w-full rounded bg-[#333] p-4 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-600"
+                required
+              />
+            </div>
 
-    {!isSignIn && (<div className="mb-4">
-      <input
-        type="text"
-        placeholder="Full Name"
-        className="w-full rounded bg-[#333] p-4 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-600"
-      />
-    </div>)}
+            {/* Full Name (Sign Up only) */}
+            {!isSignIn && (
+              <div className="mb-4">
+                <input
+                  ref={name}
+                  type="text"
+                  placeholder="Full Name"
+                  className="w-full rounded bg-[#333] p-4 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-600"
+                  required
+                />
+              </div>
+            )}
 
-    {/* Password */}
-    <div className="mb-6">
-      <input
-        type="password"
-        placeholder="Password"
-        className="w-full rounded bg-[#333] p-4 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-600"
-      />
-    </div>
+            {/* Password */}
+            <div className="mb-6">
+              <input
+                ref={password}
+                type="password"
+                placeholder="Password"
+                className="w-full rounded bg-[#333] p-4 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-600"
+                required
+              />
+            </div>
 
-    {/* Sign In Button */}
-    <button className="w-full rounded bg-red-600 py-3 font-semibold hover:bg-red-700 transition">
-      Sign In
-    </button>
+            {errorMessage && (
+              <div className="mb-4 text-sm text-red-400">
+                {errorMessage}
+              </div>
+            )}
 
-    {/* Remember & Help */}
-    <div className="mt-4 flex items-center justify-between text-sm text-gray-400">
-      <label className="flex items-center gap-2">
-        <input type="checkbox" className="accent-red-600" />
-        Remember me
-      </label>
-      <span className="cursor-pointer hover:underline">Need help?</span>
-    </div>
+            <button
+              type="submit"
+              className="w-full rounded bg-red-600 py-3 font-semibold hover:bg-red-700 transition disabled:opacity-60"
+              disabled={loading}
+            >
+              {loading
+                ? isSignIn
+                  ? "Signing in..."
+                  : "Signing up..."
+                : isSignIn
+                ? "Sign In"
+                : "Sign Up"}
+            </button>
+          </form>
 
-    {/* Footer */}
-    <div className="mt-8 text-gray-400 text-sm">
-      {(isSignIn) ? "New to Netflix?" : "Already a user?"}{" "}
-      <span onClick={() => toogleSignIn()} className="cursor-pointer text-white hover:underline">
-        {(isSignIn) ? "Sign up now" : "Sign in now"}
-      </span>
-    </div>
-  </div>
-</div>
-
+          {/* Footer */}
+          <div className="mt-8 text-gray-400 text-sm">
+            {isSignIn ? "New to Netflix?" : "Already a user?"}{" "}
+            <span
+              onClick={toggleSignIn}
+              className="cursor-pointer text-white hover:underline"
+            >
+              {isSignIn ? "Sign up now" : "Sign in now"}
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
