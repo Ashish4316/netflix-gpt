@@ -6,6 +6,7 @@ import { removeUser,addUser } from "../utils/userSlice";
 import { useEffect } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../utils/firebase";
+import { logo, profile } from "../utils/constant";
 const Header = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -30,15 +31,17 @@ const Header = () => {
         dispatch(removeUser());
       }
     })
+    return () => {
+    if (typeof unsubscribe === "function") unsubscribe();
+  };
   },[]);
-
   return (
     <header className="fixed top-0 left-0 z-50 w-full bg-gradient-to-b from-black/90 to-black/30">
       <div className="flex items-center justify-between px-8 py-3">
         {/* Logo */}
         <img
           className="w-36 md:w-44 cursor-pointer"
-          src="https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg"
+          src= {logo}
           alt="Netflix"
         />
 
@@ -49,7 +52,7 @@ const Header = () => {
               {/* Profile Image */}
               <img
                 className="w-9 h-9 rounded cursor-pointer hover:ring-2 hover:ring-red-600 transition"
-                src={user.photoURL || "https://wallpapers.com/images/hd/netflix-profile-pictures-1000-x-1000-qo9h82134t9nv0j0.jpg"}
+                src={user.photoURL || profile }
                 alt="Profile"
               />
 
