@@ -1,37 +1,26 @@
 import React, { useEffect } from 'react'
-import { API_OPTIONS } from '../utils/constant';
-import { useDispatch, useSelector } from 'react-redux';
-import { addVideoTailer } from '../utils/moviesSlice'
-import appStore from '../utils/appStore';
+import { useSelector } from 'react-redux';
+import useMovieTrailer from '../hooks/useMoveTrailer';
 
-const VideBackground = ({movieId}) => {
-  const dispatch  = useDispatch();
-  const store = useSelector((store) => store.movies)
 
-  const getMovieTrailer = async () => {
-    const data = await fetch(`https://api.themoviedb.org/3/movie/${movieId}/videos`,API_OPTIONS);
-    const json = await data.json();
-    const results = json.results;
-    console.log(results);
-    const idx = results.length - 1;
-    const key = results[idx].key;
-    dispatch(addVideoTailer(key));
-  }
-  useEffect(() => {
-    getMovieTrailer();
-  },[])
+const VideBackground = ({ movieId }) => {
+  const store = useSelector((store) => store.movies);
+  useMovieTrailer(movieId);
+
   return (
-    <div>
-      <iframe width="560" height="315" 
-      src= {`https://www.youtube.com/embed/${store.key}?si=7CiHfP_6LJY5orr7`} 
-      title="YouTube video player" 
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+    <div className="relative w-screen h-[80vh] md:h-[95vh] overflow-hidden">
+      {/* Background Video */}
+      <iframe
+        className="absolute top-0 left-0 w-full h-full scale-125 object-cover -z-10"
+        src={`https://www.youtube.com/embed/${store.key}?autoplay=1&mute=1&controls=0&loop=1&playlist=${store.key}&modestbranding=1&rel=0`}
+        title="YouTube video player"
+        allow="encrypted-media"
+      />
 
-      >
-      </iframe>  
+      {/* Dark Netflix Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-r from-black via-black/60 to-transparent"></div>
     </div>
-  )
-}
+  );
+};
 
 export default VideBackground;
-
