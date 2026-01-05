@@ -32,10 +32,12 @@ function AuthListener() {
 
 const App = () => {
   return (
-    <Provider store={appStore}>
-      <AuthListener />
-      <Body/>
-    </Provider>
+    <div className="overflow-x-hidden">
+      <Provider store={appStore}>
+        <AuthListener />
+        <Body/>
+      </Provider>
+    </div>
   )
 }
 export default App

@@ -41,8 +41,6 @@ const VideoTitle = ({ title, overview }) => {
             </svg>
             <span className="tracking-wide">Play</span>
           </button>
-
-          {/* More Info Button - Netflix exact style */}
           <button className="
             group
             flex items-center justify-center gap-2 

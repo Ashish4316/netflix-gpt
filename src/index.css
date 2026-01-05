@@ -1,1 +1,24 @@
 @import "tailwindcss";
+
+.scrollbar-hide {
+  -ms-overflow-style: none;  
+  scrollbar-width: none;  
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  
+}
+
+
+.netflix-scroll {
+  scroll-behavior: smooth;
+}
+
+.movie-card {
+  transition: transform 0.3s ease;
+}
+
+.movie-card:hover {
+  transform: scale(1.05);
+  z-index: 10;
+}
